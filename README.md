@@ -94,9 +94,9 @@ _Herramientas que se utilizaron para crear el juego:_
 _Los integrantes que conformamos el grupo somos los siguientes:_
 
 * **Isaac Herrera**  - *[Moshe9647](https://github.com/MOSHE9647)*
-* **Melanie Oviedo** - *[Melanie_OM](#fulanito-de-tal)*
-* **Jason Madrigal** - *[Jason_MO](#fulanito-de-tal)*
-* **Gonzalo Dormos** - *[Gonzalo_D](#fulanito-de-tal)*
+* **Melanie Oviedo** - *[MelanieOviedo](https://github.com/MelanieOviedo)*
+* **Jason Madrigal** - *[jasonTIZ](https://github.com/jasonTIZ)*
+* **Gonzalo Dormos** - *[gonzalodr](https://github.com/gonzalodr)*
 
 ---
 Escrito por [Moshe9647](https://github.com/MOSHE9647) 🔥
