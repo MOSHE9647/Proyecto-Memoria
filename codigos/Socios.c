@@ -183,7 +183,7 @@ void allocMemory(Process *p) {
 				sleep(1);
 				system("clear");
 				// Aquí asignamos los Procesos:
-				memory.partitions[i].isFree = FALSE; // Indicamos que la Partición está Ocupada
+				memory.partitions[i].isFree = FALSE;  // Indicamos que la Partición está Ocupada
 				memory.partitions[i].process = p;	  // Le asignamos el Proceso a la Partición
 				printMemoryStatus();				  // Imprimimos el Estado de la Memoria
 				partitionID++;						  // Incrementamos el ID
