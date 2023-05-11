@@ -1,6 +1,5 @@
 #include "src/socios.h"
-
-Memory mainMemory;
+#include "src/mapaBits.h"
 
 int main () {
 	int option = 0;
@@ -18,8 +17,9 @@ int main () {
 
 		switch (option) {
 			case 1: {
-				//mapaDeBits();
-
+				system("clear");
+				initMemory(MAPA_BITS);
+				mapaDeBits();
 				break;
 			}
 			case 2: {
@@ -62,7 +62,8 @@ int main () {
 			}
 			case 3: {
 				system("clear");
-				socios(&mainMemory);
+				//initMemory(SOCIOS);
+				socios();
 				break;
 			}
 			case 4: {

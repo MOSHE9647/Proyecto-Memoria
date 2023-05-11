@@ -11,14 +11,12 @@
 #include <time.h>					/* Para uso con Srand y Rand      */
 
 // FUNCIONES A UTILIZAR:
-void freeMemory(int processID);		/* Liberar la Memoria Usada por un Proceso        */
-int newSpace(int processSize);		/* Determina la Potencia de 2 más cercana         */
-void allocMemory(Process *p);		/* Le Asigna Memoria a un Proceso específico      */
-void delPartition(int pos);			/* Elimina una Partición de la Memoria            */
-void socios(Memory *main);			/* Función que se Ejecuta en el Main              */
-void printMemoryStatus();			/* Imprime el Estado de la Memoria en Pantalla    */
-void initMemory();					/* Inicializa la Partición Inicial de Memoria     */
-int memoryEmpty();					/* Verifica si Todas las Particiones están Libres */
+void freeMemory(int processID);	/* Liberar la Memoria Usada por un Proceso        */
+int newSpace(int processSize);	/* Determina la Potencia de 2 más cercana         */
+void allocMemory(Process *p);	/* Le Asigna Memoria a un Proceso específico      */
+void delPartition(int pos);		/* Elimina una Partición de la Memoria            */
+int memoryEmpty();				/* Verifica si Todas las Particiones están Libres */
+void socios();					/* Función que se Ejecuta en el Main              */
 
 // HILOS:
 sem_t mutex;				  /* Administrador de los Hilos en Sistemas Socios     */
@@ -29,31 +27,8 @@ Process list[NUM_PROCESS];	  /* Vector que contiene a cada uno de los Procesos d
 int firstTime = TRUE;		  /* Indica si es la Primera vez que se Ejecuta el Programa      */
 int partitionID = 2;		  /* Se utiliza para asignarle un ID a las Particiones           */
 int needSpace = 3;			  /* Se utiliza para indicar si un Proceso necesita Espacio      */
-Memory *memory;				  /* Variable que Representa a la Memoria dentro del Programa    */
 
 // FUNCIONES:
-void initMemory() {
-	/********************************************************
-		Inicializa la Memoria del Programa, creando primero
-		una parición Inicial de 256kb (MEMORY_SIZE) y luego
-		inicializando el resto de la Memoria en NULL
-	*********************************************************/
-	memory->numPart = 1;	// Iniciamos con 1 Partición
-
-	// Iniciamos la Partición 1:
-	memory->partitions[0].size = MEMORY_SIZE;	// Le asignamos 256 KB de Memoria
-	memory->partitions[0].isFree = TRUE;		// Indicamos que está Libre
-	memory->partitions[0].process = NULL;		// Lo iniciamos en NULL
-	memory->partitions[0].id = 1;				// Le decimos que es la Partición 1
-
-	// Iniciamos el Resto de la Memoria en NULL
-	for (int i = 1; i < MEMORY_SIZE; i++) {
-		memory->partitions[i].process = NULL;	// No tiene Proceso Asignado
-		memory->partitions[i].isFree = -1;		// No está Creada
-		memory->partitions[i].size = -1;		// No tiene Tamaño
-		memory->partitions[i].id = -1;			// No tiene ID
-	}
-}
 int newSpace(int processSize) {
 	/******************************************************
 		Esta función se encarga de determinar que tamaño
@@ -83,39 +58,10 @@ void delPartition(int pos) {
 		corriendo todas las particiones siguientes
 		una posición a la Izquierda
 	**************************************************/
-	for (int i = pos; i < memory->numPart; i++) {
-		memory->partitions[i] = memory->partitions[i + 1];
+	for (int i = pos; i < memory.numPart; i++) {
+		memory.partitions[i] = memory.partitions[i + 1];
 	}
-	memory->numPart--; // Disminuimos la Cantidad de Particiones
-}
-void printMemoryStatus() {
-	/****************************************************
-		Esta función se encarga de imprimir el Estado
-		de la Memoria por Pantalla, mostrando la ID,
-		el Tamaño, el Estado y el ID del Proceso asignado
-		a esa Partición.
-	*****************************************************/
-	printf("\n                   ESTADO DE LA MEMORIA\n");
-	printf("══════════════════════════════════════════════════════════════\n");
-	printf(" #\tPARTICION\tTAMAÑO\t        ESTADO\t   PROCESO\t\n");
-	printf("--------------------------------------------------------------\n");
-	for (int i = 0; i < memory->numPart; i++) {
-		/*************************************************
-			Si la Partición posee un Proceso, mostramos
-			por pantalla el ID y el Tamaño del mismo
-		*************************************************/
-		if (memory->partitions[i].process != NULL) { 
-			printf(" %d\tPartición %d\t%d KB\t\t%s\t   %d (%d KB)\n", i + 1, memory->partitions[i].id, memory->partitions[i].size, memory->partitions[i].isFree ? "Libre" : "Ocupada", memory->partitions[i].process->id, memory->partitions[i].process->size);
-		}
-		else {
-			/*******************************************
-				En caso contrario, solo mostramos las
-				siglas N/A por pantalla
-			********************************************/
-			printf(" %d\tPartición %d\t%d KB\t\t%s\t   %s\n", i + 1, memory->partitions[i].id, memory->partitions[i].size, memory->partitions[i].isFree ? "Libre" : "Ocupada", "N/A");
-		}
-	}
-	printf("══════════════════════════════════════════════════════════════\n\n");
+	memory.numPart--; // Disminuimos la Cantidad de Particiones
 }
 void allocMemory(Process *p) {
 	/******************************************************************
@@ -132,11 +78,11 @@ void allocMemory(Process *p) {
 		se devuelve un mensaje de Error.
 	*******************************************************************/
 
-	for (int i = 0; i < memory->numPart; i++) {
+	for (int i = 0; i < memory.numPart; i++) {
 		// Comprobamos que la Partición esté Libre:
-		if (memory->partitions[i].isFree) {
+		if (memory.partitions[i].isFree) {
 			int newSize = newSpace(p->size); // Redondeamos el Tamaño del Proceso
-			if (memory->partitions[i].size == newSize) {
+			if (memory.partitions[i].size == newSize) {
 				/******************************************
 					Si el Tamaño del Proceso es Igual al
 					Tamaño de la Partición, asignamos el
@@ -144,27 +90,27 @@ void allocMemory(Process *p) {
 				*******************************************/
 				// Esto es puramente Estético:
 				system("clear");
-				printMemoryStatus();
+				printMemoryStatus(SOCIOS);
 				printf("Asignandole Memoria al Proceso %d (%d KB).\n", p->id, p->size);
 				sleep(1);
 				system("clear");
-				printMemoryStatus();
+				printMemoryStatus(SOCIOS);
 				printf("Asignandole Memoria al Proceso %d (%d KB)..\n", p->id, p->size);
 				sleep(1);
 				system("clear");
-				printMemoryStatus();
+				printMemoryStatus(SOCIOS);
 				printf("Asignandole Memoria al Proceso %d (%d KB)...\n", p->id, p->size);
 				sleep(1);
 				system("clear");
 				// Aquí asignamos los Procesos:
-				memory->partitions[i].isFree = FALSE; // Indicamos que la Partición está Ocupada
-				memory->partitions[i].process = p;	  // Le asignamos el Proceso a la Partición
-				printMemoryStatus();				  // Imprimimos el Estado de la Memoria
+				memory.partitions[i].isFree = FALSE; // Indicamos que la Partición está Ocupada
+				memory.partitions[i].process = p;	  // Le asignamos el Proceso a la Partición
+				printMemoryStatus(SOCIOS);				  // Imprimimos el Estado de la Memoria
 				partitionID++;						  // Incrementamos el ID
-				printf("Proceso %d (%d KB) asignado a la Partición %d (%d KB)\n", p->id, p->size, memory->partitions[i].id, memory->partitions[i].size);
+				printf("Proceso %d (%d KB) asignado a la Partición %d (%d KB)\n", p->id, p->size, memory.partitions[i].id, memory.partitions[i].size);
 				return; // Retornamos
 			}
-			else if(memory->partitions[i].size > p->size) {
+			else if(memory.partitions[i].size > p->size) {
 				/*****************************************************
 					Si el Tamaño de la Partición es más Grande que
 					la del Proceso, dividimos la Partición en 2 y
@@ -173,14 +119,14 @@ void allocMemory(Process *p) {
 				******************************************************/
 				// Puramente Estético:
 				system("clear");
-				printMemoryStatus();
-				printf("Dividiendo la Partición %d (%d KB).\n", memory->partitions[i].id, memory->partitions[i].size);
+				printMemoryStatus(SOCIOS);
+				printf("Dividiendo la Partición %d (%d KB).\n", memory.partitions[i].id, memory.partitions[i].size);
 				sleep(1);
 				system("clear");
-				printMemoryStatus();
+				printMemoryStatus(SOCIOS);
 				// Aquí Dividimos:
 				Partition aux;							   // Partición Auxiliar
-				aux.size = memory->partitions[i].size / 2; // Le asignamos la mitad del Tamaño de la Particion Actual
+				aux.size = memory.partitions[i].size / 2; // Le asignamos la mitad del Tamaño de la Particion Actual
 				aux.process = NULL;						   // Le decimos que no tiene Proceso asignado
 				aux.isFree = TRUE;						   // Le indicamos que está libre
 				aux.id = partitionID;					   // Le indicamos un ID
@@ -194,14 +140,14 @@ void allocMemory(Process *p) {
 					************************************************************/
 					for (int k = 0; k < 2; k++) {
 						// Corremos 2 posiciones:
-						for (int j = memory->numPart; j > i; j--) {
-							memory->partitions[j] = memory->partitions[j - 1];
+						for (int j = memory.numPart; j > i; j--) {
+							memory.partitions[j] = memory.partitions[j - 1];
 						}
 					}
-					memory->partitions[i] = aux; 					// Asignamos la Partición
-					memory->partitions[i + 1] = aux;				// Volvemos a Asignar
-					memory->partitions[i + 2].size = MEMORY_SIZE;	// Acomodamos la Partición 1
-					memory->numPart++;						// Eliminamos la Partición 1
+					memory.partitions[i] = aux; 					// Asignamos la Partición
+					memory.partitions[i + 1] = aux;				// Volvemos a Asignar
+					memory.partitions[i + 2].size = MEMORY_SIZE;	// Acomodamos la Partición 1
+					memory.numPart++;						// Eliminamos la Partición 1
 					firstTime = FALSE;								// Indicamos que ya no es la Primera Vez
 				} else {
 					/*********************************************************
@@ -211,14 +157,14 @@ void allocMemory(Process *p) {
 						a la posición 'i' y se le va a cambiar el tamaño a
 						la Partición en la Posición 'i + 1'
 					**********************************************************/
-					for (int j = memory->numPart; j > i; j--) {
+					for (int j = memory.numPart; j > i; j--) {
 						// Corremos las Particiones:
-						memory->partitions[j] = memory->partitions[j - 1];
+						memory.partitions[j] = memory.partitions[j - 1];
 					}
 					// Asignamos la particion Auxiliar:
-					memory->partitions[i] = aux;	 // Asignamos Aux
-					memory->partitions[i + 1] = aux; // Cambiamos el Tamaño de 'i + 1'
-					memory->numPart++;		 // Incrementamos el Número de Particiones
+					memory.partitions[i] = aux;	 // Asignamos Aux
+					memory.partitions[i + 1] = aux; // Cambiamos el Tamaño de 'i + 1'
+					memory.numPart++;		 // Incrementamos el Número de Particiones
 				}
 				i = -1;	// Reiniciamos el Contador del for
 			}
@@ -236,13 +182,13 @@ int memoryEmpty() {
 		Libres. De ser así Retorna TRUE
 	************************************************/
 	int allFree = TRUE;	// Con esto Verificamos
-	for (int i = 0; i < memory->numPart; i++) {
+	for (int i = 0; i < memory.numPart; i++) {
 		/**********************************************
 			Si existe alguna Partición que no esté
 			libre, cambiamos el valor de allFree
 			por FALSE
 		***********************************************/
-		if (memory->partitions[i].isFree == FALSE) {	allFree = FALSE; break; }
+		if (memory.partitions[i].isFree == FALSE) {	allFree = FALSE; break; }
 	}
 	/************************************************
 		Si todas las Particiones están Libres,
@@ -267,23 +213,23 @@ void freeMemory(int processID) {
 	// Siempre y cuando la Memoria no esté Vacía:
 	if (!memoryEmpty()) {
 		int deleted = FALSE; // Para indicar si una Partición se Liberó
-		for (int i = 0; i < memory->numPart; i++) {
+		for (int i = 0; i < memory.numPart; i++) {
 			// Verificamos Si la Partición posee un Proceso:
-			if (memory->partitions[i].process != NULL) {
+			if (memory.partitions[i].process != NULL) {
 				// Verificamos que el ID sea igual al del Proceso:
-				if (memory->partitions[i].process->id == processID) {
+				if (memory.partitions[i].process->id == processID) {
 					// Puramente Estético:
 					system("clear");
-					printMemoryStatus();
-					printf("Liberando la Memoria del Proceso %d (%d KB).\n", memory->partitions[i].process->id, memory->partitions[i].process->size);
+					printMemoryStatus(SOCIOS);
+					printf("Liberando la Memoria del Proceso %d (%d KB).\n", memory.partitions[i].process->id, memory.partitions[i].process->size);
 					sleep(1);
 					system("clear");
-					printMemoryStatus();
-					printf("Liberando la Memoria del Proceso %d (%d KB)..\n", memory->partitions[i].process->id, memory->partitions[i].process->size);
+					printMemoryStatus(SOCIOS);
+					printf("Liberando la Memoria del Proceso %d (%d KB)..\n", memory.partitions[i].process->id, memory.partitions[i].process->size);
 					sleep(1);
 					system("clear");
-					printMemoryStatus();
-					printf("Liberando la Memoria del Proceso %d (%d KB)..\n", memory->partitions[i].process->id, memory->partitions[i].process->size);
+					printMemoryStatus(SOCIOS);
+					printf("Liberando la Memoria del Proceso %d (%d KB)..\n", memory.partitions[i].process->id, memory.partitions[i].process->size);
 					sleep(1);
 					// Aquí Liberamos la Memoria:
 					/************************************************************
@@ -291,21 +237,21 @@ void freeMemory(int processID) {
 						de esta es igual al de la Partición Actual, eliminamos
 						la siguiente y le duplicamos el Tamaño a la Primera
 					*************************************************************/
-					if (memory->partitions[i + 1].isFree) {
-						if (memory->partitions[i].id == memory->partitions[i + 1].id) {
-							if (memory->partitions[i].size == memory->partitions[i + 1].size) {
-								memory->partitions[i].size *= 2; // Duplicamos su Tamaño
+					if (memory.partitions[i + 1].isFree) {
+						if (memory.partitions[i].id == memory.partitions[i + 1].id) {
+							if (memory.partitions[i].size == memory.partitions[i + 1].size) {
+								memory.partitions[i].size *= 2; // Duplicamos su Tamaño
 								delPartition(i + 1);             // Eliminamos la Particion Sobrante
 								deleted = TRUE;					 // Indicamos que se Liberó
 							}
 						}
 					}
-					memory->partitions[i].process = NULL; // Eliminamos el Proceso
-					memory->partitions[i].isFree = TRUE;  // Liberamos la Memoria
+					memory.partitions[i].process = NULL; // Eliminamos el Proceso
+					memory.partitions[i].isFree = TRUE;  // Liberamos la Memoria
 					deleted = TRUE;						  // Indicamos que se Liberó
 					// Estético:
 					system("clear");
-					printMemoryStatus();
+					printMemoryStatus(SOCIOS);
 					printf("Memoria Liberada...\n");
 					break;
 				}
@@ -315,10 +261,10 @@ void freeMemory(int processID) {
 				Particiones Liberadas del mismo tamaño que no
 				se llegaron a unir. De ser así se intentan unir:
 			*******************************************************/
-			for (int j = 0; j < memory->numPart; j++) {
-				if (memory->partitions[j].isFree && memory->partitions[j + 1].isFree) {
-					if (memory->partitions[j].size == memory->partitions[j + 1].size) {
-						memory->partitions[j].size *= 2; // Duplicamos su Tamaño
+			for (int j = 0; j < memory.numPart; j++) {
+				if (memory.partitions[j].isFree && memory.partitions[j + 1].isFree) {
+					if (memory.partitions[j].size == memory.partitions[j + 1].size) {
+						memory.partitions[j].size *= 2; // Duplicamos su Tamaño
 						delPartition(j + 1); 			 // Eliminamos la Particion Sobrante
 					}
 				}
@@ -330,8 +276,8 @@ void freeMemory(int processID) {
 				todas las variables de la Memoria
 			**********************************************/
 			system("clear");     // Limpiamos Pantalla de la Consola
-			initMemory();        // Reiniciamos las Particiones de la Memoria
-			printMemoryStatus(); // Imprimimos el Estado de la Memoria
+			initMemory(SOCIOS);  // Reiniciamos las Particiones de la Memoria
+			printMemoryStatus(SOCIOS); // Imprimimos el Estado de la Memoria
 			printf("Toda la Memoria ha sido Liberada...\n");
 		}
 		/*****************************************************
@@ -387,11 +333,10 @@ void *startSocios(void *arg) {
 	// Indicamos que ya terminó el Hilo:
 	pthread_exit(NULL);
 }
-void socios(Memory *main) {
+void socios() {
 	// Creamos e Inicializamos la Memoria:
-	memory = main;
-	initMemory();
-	printMemoryStatus();
+	//initMemory(SOCIOS);
+	printMemoryStatus(SOCIOS);
 
 	// Creamos los Hilos y el Semáforo:
 	pthread_t hilos[NUM_PROCESS];
