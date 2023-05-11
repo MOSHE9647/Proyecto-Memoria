@@ -36,7 +36,7 @@ typedef struct {
 /* Estructura para la Memoria */
 typedef struct {
     Partition partitions[MEMORY_SIZE];
-    int numPartitions;
+    int numPart;
     int size;
 } Memory;
 

@@ -11,7 +11,7 @@ int main () {
 		printf("1. Mapas de Bits\n");
 		printf("2. Listas Ligadas\n");
 		printf("3. Sistemas Socios\n");
-		printf("4. Multiprogramacion\n");
+		printf("4. Tamaños Variables\n");
 		printf("5. Salir del Programa\n");
 		printf("**************************************\n");
 		printf("Digite una Opcion: "); scanf("%d", &option);
