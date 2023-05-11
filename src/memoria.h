@@ -122,10 +122,13 @@ void printMemoryStatus(int policy) {
                 Mostramos el estado de cada uno de los bloques
                 de Memoria en forma de Matriz:
             *****************************************************/
-            for (int i = 1; i <= memory.numPart; i++) {
+            for (int i = 0; i < memory.numPart; i++) {
+                // Errores de lógica :')
                 printf("[%i] ", !memory.partitions[i].isFree);
-                if ((i % 8) == 0) {
-                    printf("\n");
+                if (i > 0) {
+                    if (((i + 1) % 8) == 0) {
+                        printf("\n");
+                    }
                 }
             }
             printf("\n");
