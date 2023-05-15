@@ -1,69 +1,42 @@
 #ifndef SOCIOS_H
 #define SOCIOS_H
 
-/******************************************************************************
-	ARCHIVO DE CABECERA DONDE SE ENCUENTRAN TODAS LAS FUNCIONES RELACIONADAS
-	A LA POLITICA DE ADMINISTRACION DE MEMORIA "SISTEMAS SOCIOS"
-*******************************************************************************/
+/**********************************************************************************************
+		ARCHIVO DE CABECERA DONDE SE ENCUENTRAN TODAS LAS FUNCIONES RELACIONADAS
+		A LA POLITICA DE ADMINISTRACION DE MEMORIA "SISTEMAS SOCIOS"
+**********************************************************************************************/
 
-// INCLUDE / DEFINE:
+/************************************ INCLUDES / DEFINES *************************************/
+
 #include "memoria.h"				/* Archivo de Cabecera de Memoria */
 #include <time.h>					/* Para uso con Srand y Rand      */
 
-// FUNCIONES A UTILIZAR:
-void freeMemory(int processID);	/* Liberar la Memoria Usada por un Proceso        */
-int newSpace(int processSize);	/* Determina la Potencia de 2 más cercana         */
-void allocMemory(Process *p);	/* Le Asigna Memoria a un Proceso específico      */
-void delPartition(int pos);		/* Elimina una Partición de la Memoria            */
-int memoryEmpty();				/* Verifica si Todas las Particiones están Libres */
+/*********************************** FUNCIONES A UTILIZAR ************************************/
+
+// PRINCIPALES:
+int allocMemory(Process *);		/* Le Asigna Memoria a un Proceso específico      */
+void freeMemory(int);			/* Liberar la Memoria Usada por un Proceso        */
+void adaptSocios();
+void initSocios();				/* Inicializa la Partición Inicial de Memoria     */
 void socios();					/* Función que se Ejecuta en el Main              */
-
+// EXTRAS:
+void printMemorySocios();		/* Imprime el Estado de la Memoria en Pantalla    */
+void delPartition(int);			/* Elimina una Partición de la Memoria            */
+int newSpace(int);				/* Determina la Potencia de 2 más cercana         */
 // HILOS:
-sem_t mutex;				  /* Administrador de los Hilos en Sistemas Socios     */
-void *startSocios(void *arg); /* Función que se va a Encargar de manejar los Hilos */
+sem_t mutex;				    /* Administrador de los Hilos en Sistemas Socios     */
+void *startSocios(void *);		/* Función que se va a Encargar de manejar los Hilos */
 
-// VARIABLES GLOBALES:
+/************************************ VARIABLES GLOBALES *************************************/
+
 Process list[NUM_PROCESS];	  /* Vector que contiene a cada uno de los Procesos del Programa */
 int firstTime = TRUE;		  /* Indica si es la Primera vez que se Ejecuta el Programa      */
 int partitionID = 2;		  /* Se utiliza para asignarle un ID a las Particiones           */
 int needSpace = 3;			  /* Se utiliza para indicar si un Proceso necesita Espacio      */
 
-// FUNCIONES:
-int newSpace(int processSize) {
-	/******************************************************
-		Esta función se encarga de determinar que tamaño
-		de Partición es el más indicado para Asignarle al
-		proceso, tomando en cuenta el tamaño del Proceso
-		y redondéandolo a la Potencia de 2 más cercana:
-	*******************************************************/
-	int powers[9] = {1, 2, 4, 8, 16, 32, 64, 128, 256};	// Potencias de 2
-	for (int i = 0; i < 9; i++) {
-		/**********************************************
-			Devolvemos el Tamaño del Proceso en caso
-			de que este ya sea una Potencia de 2:
-		***********************************************/
-		if (processSize == powers[i]) { return processSize; }
-		/**********************************************
-			En caso contrario devolvemos la Potencia
-			de 2 más cercana al Tamaño del Proceso
-		***********************************************/
-		else if (processSize < powers[i]) { return powers[i]; }
-	}
-	return -1; // Retornamos -1 en caso de que haya ocurrido un error
-}
-void delPartition(int pos) {
-	/*************************************************
-		Esta función se encarga de eliminar una
-		Partición de la Memoria según su Posición,
-		corriendo todas las particiones siguientes
-		una posición a la Izquierda
-	**************************************************/
-	for (int i = pos; i < memory.numPart; i++) {
-		memory.partitions[i] = memory.partitions[i + 1];
-	}
-	memory.numPart--; // Disminuimos la Cantidad de Particiones
-}
-void allocMemory(Process *p) {
+/*********************************** FUNCIONES PRINCIPALES ***********************************/
+
+int allocMemory(Process *p) {
 	/******************************************************************
 		Esta funcion se encarga de Asignarle Memoria a un Proceso
 		pasado por parámetro.
@@ -90,25 +63,25 @@ void allocMemory(Process *p) {
 				*******************************************/
 				// Esto es puramente Estético:
 				system("clear");
-				printMemoryStatus(SOCIOS);
+				printMemorySocios();
 				printf("Asignandole Memoria al Proceso %d (%d KB).\n", p->id, p->size);
 				sleep(1);
 				system("clear");
-				printMemoryStatus(SOCIOS);
+				printMemorySocios();
 				printf("Asignandole Memoria al Proceso %d (%d KB)..\n", p->id, p->size);
 				sleep(1);
 				system("clear");
-				printMemoryStatus(SOCIOS);
+				printMemorySocios();
 				printf("Asignandole Memoria al Proceso %d (%d KB)...\n", p->id, p->size);
 				sleep(1);
 				system("clear");
 				// Aquí asignamos los Procesos:
 				memory.partitions[i].isFree = FALSE; // Indicamos que la Partición está Ocupada
 				memory.partitions[i].process = p;	  // Le asignamos el Proceso a la Partición
-				printMemoryStatus(SOCIOS);				  // Imprimimos el Estado de la Memoria
+				printMemorySocios();				  // Imprimimos el Estado de la Memoria
 				partitionID++;						  // Incrementamos el ID
 				printf("Proceso %d (%d KB) asignado a la Partición %d (%d KB)\n", p->id, p->size, memory.partitions[i].id, memory.partitions[i].size);
-				return; // Retornamos
+				return TRUE; // Retornamos
 			}
 			else if(memory.partitions[i].size > p->size) {
 				/*****************************************************
@@ -119,14 +92,14 @@ void allocMemory(Process *p) {
 				******************************************************/
 				// Puramente Estético:
 				system("clear");
-				printMemoryStatus(SOCIOS);
+				printMemorySocios();
 				printf("Dividiendo la Partición %d (%d KB).\n", memory.partitions[i].id, memory.partitions[i].size);
 				sleep(1);
 				system("clear");
-				printMemoryStatus(SOCIOS);
+				printMemorySocios();
 				// Aquí Dividimos:
 				Partition aux;							   // Partición Auxiliar
-				aux.size = memory.partitions[i].size / 2; // Le asignamos la mitad del Tamaño de la Particion Actual
+				aux.size = memory.partitions[i].size / 2;  // Le asignamos la mitad del Tamaño de la Particion Actual
 				aux.process = NULL;						   // Le decimos que no tiene Proceso asignado
 				aux.isFree = TRUE;						   // Le indicamos que está libre
 				aux.id = partitionID;					   // Le indicamos un ID
@@ -171,33 +144,7 @@ void allocMemory(Process *p) {
 		}
 	}
 	// Si no había espacio para asignar el Proceso, se muestra un mensaje de Error:
-    printf("No se le pudo asignar la Memoria al Proceso %d (%d KB) por Falta de Espacio...\n", p->id, p->size);
-	needSpace = TRUE; // Indicamos que se Necesita Espacio
-	return;
-}
-int memoryEmpty() {
-	/***********************************************
-		Esta funcion se encarga de verificar si
-		todas las Particiones de la Memoria están
-		Libres. De ser así Retorna TRUE
-	************************************************/
-	int allFree = TRUE;	// Con esto Verificamos
-	for (int i = 0; i < memory.numPart; i++) {
-		/**********************************************
-			Si existe alguna Partición que no esté
-			libre, cambiamos el valor de allFree
-			por FALSE
-		***********************************************/
-		if (memory.partitions[i].isFree == FALSE) {	allFree = FALSE; break; }
-	}
-	/************************************************
-		Si todas las Particiones están Libres,
-		reiniciamos las Particiones de la Memoria
-		y retornamos. En caso contrario, mostramos
-		un mensaje de Error por pantalla
-	*************************************************/
-	if (allFree) { return TRUE; }
-	else { return FALSE; }
+	return FALSE;
 }
 void freeMemory(int processID) {
 	/****************************************************************************
@@ -220,15 +167,15 @@ void freeMemory(int processID) {
 				if (memory.partitions[i].process->id == processID) {
 					// Puramente Estético:
 					system("clear");
-					printMemoryStatus(SOCIOS);
+					printMemorySocios();
 					printf("Liberando la Memoria del Proceso %d (%d KB).\n", memory.partitions[i].process->id, memory.partitions[i].process->size);
 					sleep(1);
 					system("clear");
-					printMemoryStatus(SOCIOS);
+					printMemorySocios();
 					printf("Liberando la Memoria del Proceso %d (%d KB)..\n", memory.partitions[i].process->id, memory.partitions[i].process->size);
 					sleep(1);
 					system("clear");
-					printMemoryStatus(SOCIOS);
+					printMemorySocios();
 					printf("Liberando la Memoria del Proceso %d (%d KB)..\n", memory.partitions[i].process->id, memory.partitions[i].process->size);
 					sleep(1);
 					// Aquí Liberamos la Memoria:
@@ -251,7 +198,7 @@ void freeMemory(int processID) {
 					deleted = TRUE;						  // Indicamos que se Liberó
 					// Estético:
 					system("clear");
-					printMemoryStatus(SOCIOS);
+					printMemorySocios();
 					printf("Memoria Liberada...\n");
 					break;
 				}
@@ -276,8 +223,8 @@ void freeMemory(int processID) {
 				todas las variables de la Memoria
 			**********************************************/
 			system("clear");     // Limpiamos Pantalla de la Consola
-			initMemory(SOCIOS);  // Reiniciamos las Particiones de la Memoria
-			printMemoryStatus(SOCIOS); // Imprimimos el Estado de la Memoria
+			initSocios();  // Reiniciamos las Particiones de la Memoria
+			printMemorySocios(); // Imprimimos el Estado de la Memoria
 			printf("Toda la Memoria ha sido Liberada...\n");
 		}
 		/*****************************************************
@@ -289,6 +236,141 @@ void freeMemory(int processID) {
 		return; // Retornamos
 	}
 }
+void initSocios() {
+    /********************************************************
+		Inicializa la Memoria del Programa, creando primero
+		una parición Inicial de 256kb (MEMORY_SIZE) y luego
+		inicializando el resto de la Memoria en NULL
+	*********************************************************/
+	memory.numPart = 1;	// Iniciamos con 1 Partición
+
+	// Iniciamos la Partición 1:
+	memory.partitions[0].size = MEMORY_SIZE; // Le asignamos 256 KB de Memoria
+	memory.partitions[0].process = NULL;	 // Lo iniciamos en NULL
+	memory.partitions[0].isFree = TRUE;		 // Indicamos que está Libre
+	memory.partitions[0].id = 1;			 // Le decimos que es la Partición 1
+
+	// Iniciamos el Resto de la Memoria en NULL
+	for (int i = 1; i < MEMORY_SIZE; i++) {
+		memory.partitions[i].process = NULL;	// No tiene Proceso Asignado
+		memory.partitions[i].isFree = -1;		// No está Creada
+		memory.partitions[i].size = -1;		    // No tiene Tamaño
+		memory.partitions[i].id = -1;			// No tiene ID
+	}
+}
+void adaptSocios() {
+
+	/*
+		NOTA:
+		Falta terminar de arreglar esta función, la idea de esto
+		es que una todas las particiones para que tomen la forma
+		que necesita la Política
+	*/
+
+    Memory aux;             /* Variable Auxiliar para Manejar Memoria  */
+    aux.numPart = 0;        /* Cantidad de Particiones Existente       */
+    aux.size = MEMORY_SIZE; /* Asignamos el Tamaño Total de la Memoria */
+
+	for (int i = 0; i < memory.numPart; i++) {
+		int canParts;
+		if (memory.partitions[i].process != NULL) {
+			int size = newSpace(memory.partitions[i].process->size);
+			if (size <= 2) { canParts = 1; }
+			else { canParts = size / 4; }
+			aux.partitions[aux.numPart].id = memory.partitions[i].id;
+			aux.partitions[aux.numPart].isFree = memory.partitions[i].isFree;
+			aux.partitions[aux.numPart].process = memory.partitions[i].process;
+			aux.partitions[aux.numPart].size = size;
+			aux.numPart++;
+			i += canParts;
+		} else {
+			canParts = 0;
+			for (int j = 0; memory.numPart; j++) {
+				if (memory.partitions[j].isFree) { canParts++; }
+				else { break; }
+			}
+			aux.partitions[aux.numPart].id = memory.partitions[i].id;
+			aux.partitions[aux.numPart].isFree = memory.partitions[i].isFree;
+			aux.partitions[aux.numPart].process = memory.partitions[i].process;
+			aux.partitions[aux.numPart].size = canParts * 4;
+			aux.numPart++;
+			i += canParts;
+		}
+	}
+	memory = aux;
+
+	printMemorySocios();
+	sysPause();
+}
+
+/************************************* FUNCIONES EXTRA ***************************************/
+
+void printMemorySocios() {
+	/****************************************************
+		Esta función se encarga de imprimir el Estado
+		de la Memoria por Pantalla, mostrando la ID,
+		el Tamaño, el Estado y el ID del Proceso asignado
+		a esa Partición.
+	*****************************************************/
+	printf("\n                   ESTADO DE LA MEMORIA\n");
+	printf("══════════════════════════════════════════════════════════════\n");
+	printf(" #\tPARTICION\tTAMAÑO\t        ESTADO\t   PROCESO\t\n");
+	printf("--------------------------------------------------------------\n");
+	for (int i = 0; i < memory.numPart; i++) {
+		/*************************************************
+			Si la Partición posee un Proceso, mostramos
+			por pantalla el ID y el Tamaño del mismo
+		*************************************************/
+		if (memory.partitions[i].process != NULL) { 
+			printf(" %d\tPartición %d\t%d KB\t\t%s\t   %d (%d KB)\n", i + 1, memory.partitions[i].id, memory.partitions[i].size, memory.partitions[i].isFree ? "Libre" : "Ocupada", memory.partitions[i].process->id, memory.partitions[i].process->size);
+		}
+		else {
+			/*******************************************
+				En caso contrario, solo mostramos las
+				siglas N/A por pantalla
+			********************************************/
+			printf(" %d\tPartición %d\t%d KB\t\t%s\t   %s\n", i + 1, memory.partitions[i].id, memory.partitions[i].size, memory.partitions[i].isFree ? "Libre" : "Ocupada", "N/A");
+		}
+	}
+	printf("══════════════════════════════════════════════════════════════\n\n");
+}
+void delPartition(int pos) {
+	/*************************************************
+		Esta función se encarga de eliminar una
+		Partición de la Memoria según su Posición,
+		corriendo todas las particiones siguientes
+		una posición a la Izquierda
+	**************************************************/
+	for (int i = pos; i < memory.numPart; i++) {
+		memory.partitions[i] = memory.partitions[i + 1];
+	}
+	memory.numPart--; // Disminuimos la Cantidad de Particiones
+}
+int newSpace(int processSize) {
+	/******************************************************
+		Esta función se encarga de determinar que tamaño
+		de Partición es el más indicado para Asignarle al
+		proceso, tomando en cuenta el tamaño del Proceso
+		y redondéandolo a la Potencia de 2 más cercana:
+	*******************************************************/
+	int powers[9] = {1, 2, 4, 8, 16, 32, 64, 128, 256};	// Potencias de 2
+	for (int i = 0; i < 9; i++) {
+		/**********************************************
+			Devolvemos el Tamaño del Proceso en caso
+			de que este ya sea una Potencia de 2:
+		***********************************************/
+		if (processSize == powers[i]) { return processSize; }
+		/**********************************************
+			En caso contrario devolvemos la Potencia
+			de 2 más cercana al Tamaño del Proceso
+		***********************************************/
+		else if (processSize < powers[i]) { return powers[i]; }
+	}
+	return -1; // Retornamos -1 en caso de que haya ocurrido un error
+}
+
+/************************************ EJECUCION DE SOCIOS ************************************/
+
 void *startSocios(void *arg) {
 	/***********************************************
 		Esta función es la que se encarga de la
@@ -309,23 +391,24 @@ void *startSocios(void *arg) {
 	sem_wait(&mutex);
 
 	// Asignamos Memoria al Proceso:
-	allocMemory(&list[ID]);
-	sysPause();
-
-	// Liberamos la Memoria del Proceso:
-	if (needSpace % 2 == 0 || needSpace == TRUE) {
-		freeMemory(ID + 1);
+	srand(time(NULL));
+	while (!allocMemory(&list[ID])) {
+		/*******************************************************
+			Si no se le pudo asignar Memoria a un Proceso,
+			se muestra un mensaje de Error y se intenta
+			liberar la Memoria de algún otro Proceso al
+			azar hasta que haya espacio Disponible
+		*******************************************************/
+		system("clear");
+		printMemorySocios();
+		// Mostramos Mensaje de Error:
+	    printf("No se le pudo asignar la Memoria al Proceso %d (%d KB)...\n", list[ID].id, list[ID].size);
+		printf("Espacio Insuficiente...\n\n"); sysPause();
+		// Liberamos la Memoria:
+		int id = 1 + rand() % NUM_PROCESS;
+		freeMemory(id);
 		sysPause();
 	}
-	// Limpiamos la Memoria si se llegó al Último Proceso:
-	if (ID == NUM_PROCESS - 1) {
-		for (int i = 0; i < NUM_PROCESS; i++) {
-			freeMemory(i + 1);
-			sysPause();
-		}
-	}
-	// Incrementamos needSpace:
-	needSpace++;
 
 	// Liberamos el Semáforo:
 	sem_post(&mutex);
@@ -334,9 +417,8 @@ void *startSocios(void *arg) {
 	pthread_exit(NULL);
 }
 void socios() {
-	// Creamos e Inicializamos la Memoria:
-	//initMemory(SOCIOS);
-	printMemoryStatus(SOCIOS);
+	// Mostramos la Memoria:
+	printMemorySocios();
 
 	// Creamos los Hilos y el Semáforo:
 	pthread_t hilos[NUM_PROCESS];
@@ -347,27 +429,29 @@ void socios() {
 		con solo presionar la combinación de Teclas Ctrl + C:
 	*************************************************************/
 
-	// Registra el manejador de señal para SIGINT
-	signal(SIGINT, sigint_handler);
-	printf("Presiona Ctrl-C para Terminar el Programa en Cualquier Momento.\n");
-	sysPause();
-
-	while(1) {
-		// Creamos los Procesos:
-		int powers[9] = {2, 3, 5, 7, 28, 64, 128, 14, 9};
-		srand(time(NULL));
-		for (int i = 0; i < NUM_PROCESS; i++) {
-			int size = rand() % 9;
-			list[i].size = powers[size];
-			list[i].id = i + 1;
-		}
-
-		// Iniciamos los Hilos:
-		for (int i = 0; i < NUM_PROCESS; i++) {
-			pthread_create(&hilos[i], NULL, startSocios, &i);
-			pthread_join(hilos[i], NULL);
-		}
+	// Creamos los Procesos:
+	int powers[9] = {2, 3, 5, 7, 28, 64, 128, 14, 9};
+	srand(time(NULL));
+	for (int i = 0; i < NUM_PROCESS; i++) {
+		int size = rand() % 9;
+		list[i].size = powers[size];
+		list[i].id = i + 1;
 	}
+
+	// Iniciamos los Hilos:
+	for (int i = 0; i < NUM_PROCESS; i++) {
+		pthread_create(&hilos[i], NULL, startSocios, &i);
+		pthread_join(hilos[i], NULL);
+	}
+
+	// Registra el manejador de señal para SIGINT
+	// signal(SIGINT, sigint_handler);
+	// printf("Presiona Ctrl-C para Terminar el Programa en Cualquier Momento.\n");
+	// sysPause();
+
+	// while(1) {
+		
+	// }
 
 	// Destruimos el Semáforo:
 	sem_destroy(&mutex);

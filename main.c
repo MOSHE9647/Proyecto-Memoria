@@ -2,6 +2,7 @@
 #include "src/mapaBits.h"
 
 int main () {
+	int firsTime = TRUE;
 	int option = 0;
 	do {
 		system("clear");
@@ -18,7 +19,8 @@ int main () {
 		switch (option) {
 			case 1: {
 				system("clear");
-				initMemory(MAPA_BITS);
+				if (firsTime) { initMapaBits(); firsTime = FALSE; }
+				else { adaptBits();}
 				mapaDeBits();
 				break;
 			}
@@ -62,7 +64,8 @@ int main () {
 			}
 			case 3: {
 				system("clear");
-				//initMemory(SOCIOS);
+				if (firsTime) { initMapaBits(); firsTime = FALSE; }
+				else { adaptSocios();}
 				socios();
 				break;
 			}
