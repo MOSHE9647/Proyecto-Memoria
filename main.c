@@ -20,7 +20,7 @@ int main () {
 			case 1: {
 				system("clear");
 				if (firsTime) { initMapaBits(); firsTime = FALSE; }
-				else { adaptBits();}
+				else { adaptBits(); }
 				mapaDeBits();
 				break;
 			}
@@ -64,9 +64,10 @@ int main () {
 			}
 			case 3: {
 				system("clear");
-				if (firsTime) { initMapaBits(); firsTime = FALSE; }
+				if (firsTime) { initSocios(); firsTime = FALSE; }
 				else { adaptSocios();}
 				socios();
+				sysPause();
 				break;
 			}
 			case 4: {

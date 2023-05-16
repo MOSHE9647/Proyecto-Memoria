@@ -15,7 +15,7 @@
 /*********************************** FUNCIONES A UTILIZAR ************************************/
 
 // PRINCIPALES:
-int allocBits(Process *);  /* Le Asigna Memoria a un Proceso específico         */
+int allocBits(Process *);   /* Le Asigna Memoria a un Proceso específico         */
 void initMapaBits();        /* Inicializa la Partición Inicial de Memoria        */
 void freeBits(int);         /* Libera la Memoria Utilizada por un Proceso        */
 void mapaDeBits();          /* Función que se Ejecuta en el Main                 */
@@ -65,6 +65,7 @@ int allocBits(Process *p) {
                     memory.partitions[i + j].id = j + 1;
                 }
 				system("clear");
+                printMemorySocios();
                 printMemoryBits();
                 printf("Memoria Asignada al Proceso %d (%d KB)\n", p->id, p->size);
                 return TRUE;
@@ -84,7 +85,7 @@ void initMapaBits() {
         memory.partitions[i].size = PART_SIZE;	// Tamaño asignado a la Partición
         memory.partitions[i].process = NULL;	// No tiene Proceso Asignado
         memory.partitions[i].isFree = TRUE;	    // No está Creada
-        memory.partitions[i].id = -1;	        // No tiene ID
+        memory.partitions[i].id = 0;	        // No tiene ID
         memory.size += 4;                       // Tamaño de Memoria
     }
 }
@@ -100,9 +101,10 @@ void freeBits(int processID) {
                     for (int j = 0; j < canParts; j++) {
                         memory.partitions[i + j].process = NULL;
                         memory.partitions[i + j].isFree = TRUE;
-                        memory.partitions[i + j].id = -1;
+                        memory.partitions[i + j].id = 0;
                     }
                     system("clear");
+                    printMemorySocios();
                     printMemoryBits();
                     printf("Memoria Liberada (Proceso %d)...\n", processID);
                     deleted = TRUE;
@@ -239,7 +241,9 @@ void *startBits(void *arg) {
 
 void mapaDeBits() {
     // Mostramos la Memoria:
+    printMemorySocios();
     printMemoryBits();
+    sysPause();
 
     // Creamos los Hilos y el Semáforo:
     pthread_t hilos[NUM_PROCESS];
@@ -265,6 +269,9 @@ void mapaDeBits() {
         pthread_join(hilos[i], NULL);
     }
 
+    printMemorySocios();
+    printMemoryBits();
+    sysPause();
 	// // Registra el manejador de señal para SIGINT
 	// signal(SIGINT, sigint_handler);
 	// printf("Presiona Ctrl-C para Terminar el Programa en Cualquier Momento.\n");

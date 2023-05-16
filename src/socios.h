@@ -76,7 +76,7 @@ int allocMemory(Process *p) {
 				sleep(1);
 				system("clear");
 				// Aquí asignamos los Procesos:
-				memory.partitions[i].isFree = FALSE; // Indicamos que la Partición está Ocupada
+				memory.partitions[i].isFree = FALSE;  // Indicamos que la Partición está Ocupada
 				memory.partitions[i].process = p;	  // Le asignamos el Proceso a la Partición
 				printMemorySocios();				  // Imprimimos el Estado de la Memoria
 				partitionID++;						  // Incrementamos el ID
@@ -237,11 +237,11 @@ void freeMemory(int processID) {
 	}
 }
 void initSocios() {
-    /********************************************************
+    /**********************************************************
 		Inicializa la Memoria del Programa, creando primero
 		una parición Inicial de 256kb (MEMORY_SIZE) y luego
 		inicializando el resto de la Memoria en NULL
-	*********************************************************/
+	***********************************************************/
 	memory.numPart = 1;	// Iniciamos con 1 Partición
 
 	// Iniciamos la Partición 1:
@@ -259,46 +259,42 @@ void initSocios() {
 	}
 }
 void adaptSocios() {
-
 	/*
 		NOTA:
-		Falta terminar de arreglar esta función, la idea de esto
-		es que una todas las particiones para que tomen la forma
-		que necesita la Política
-	*/
+		Esta función se encarga de convertir la memoria del Formato de Mapa
+		de Bits al Formato de Socios, creando una variable auxiliar en donde
+		se va a almacenar la info de cada partición o bloque de Memoria
+		modificado para luego asignarselo a la Memoria Principal.
 
-    Memory aux;             /* Variable Auxiliar para Manejar Memoria  */
+		La función todavía no funciona correctamente, si no entendieran bien
+		lo que hace me avisan. 
+	*/
+	Memory aux;             /* Variable Auxiliar para Manejar Memoria  */
     aux.numPart = 0;        /* Cantidad de Particiones Existente       */
     aux.size = MEMORY_SIZE; /* Asignamos el Tamaño Total de la Memoria */
 
 	for (int i = 0; i < memory.numPart; i++) {
-		int canParts;
-		if (memory.partitions[i].process != NULL) {
-			int size = newSpace(memory.partitions[i].process->size);
-			if (size <= 2) { canParts = 1; }
-			else { canParts = size / 4; }
-			aux.partitions[aux.numPart].id = memory.partitions[i].id;
-			aux.partitions[aux.numPart].isFree = memory.partitions[i].isFree;
+		if (memory.partitions[i].id == 1) {
 			aux.partitions[aux.numPart].process = memory.partitions[i].process;
-			aux.partitions[aux.numPart].size = size;
-			aux.numPart++;
-			i += canParts;
-		} else {
-			canParts = 0;
-			for (int j = 0; memory.numPart; j++) {
-				if (memory.partitions[j].isFree) { canParts++; }
-				else { break; }
+			aux.partitions[aux.numPart].isFree = memory.partitions[i].isFree;
+			aux.partitions[aux.numPart].id = memory.partitions[i].id = i + 1;
+			aux.partitions[aux.numPart].size = 0;
+			int canParts = 0;
+			for (int j = i; j < memory.numPart; j++) {
+				aux.partitions[aux.numPart].size += 4;
+				aux.numPart++;
+				canParts++;
+				if (memory.partitions[j + 1].id != 1) {
+					i += canParts - 1;
+					break;
+				}
 			}
-			aux.partitions[aux.numPart].id = memory.partitions[i].id;
-			aux.partitions[aux.numPart].isFree = memory.partitions[i].isFree;
-			aux.partitions[aux.numPart].process = memory.partitions[i].process;
-			aux.partitions[aux.numPart].size = canParts * 4;
-			aux.numPart++;
-			i += canParts;
+		} else {
+
 		}
 	}
-	memory = aux;
 
+	memory = aux;
 	printMemorySocios();
 	sysPause();
 }

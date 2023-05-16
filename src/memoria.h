@@ -49,7 +49,6 @@ typedef struct {
 
 Process list[NUM_PROCESS];	/* Lista de Procesos	*/
 Memory memory;				/* Memoria del Programa */
-int needSpace;
 
 /************************************** EXTRAS ****************************************/
 /* Función para Pausar el Programa */
