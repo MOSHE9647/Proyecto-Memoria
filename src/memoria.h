@@ -8,12 +8,13 @@
 
 /*************************************** INCLUDES **************************************/
 
-#include <semaphore.h>   /* Para uso de Semáforos    */
-#include <pthread.h>     /* Para uso de los Hilos    */
-#include <stdlib.h>      /* Para uso de Rand y Srand */
-#include <signal.h>      /* Funcion que lee CTRL+Z   */
-#include <unistd.h>      /* Para uso de Sleep        */
-#include <stdio.h>       /* Para Entrada / Salida    */
+#include <semaphore.h>   /* Para uso de Semáforos     */
+#include <pthread.h>     /* Para uso de los Hilos     */
+#include <stdlib.h>      /* Para uso de Rand y Srand  */
+#include <signal.h>      /* Funcion que lee CTRL+Z    */
+#include <unistd.h>      /* Para uso de Sleep         */
+#include <stdio.h>       /* Para Entrada / Salida     */
+#include <time.h>		 /* Para uso con Srand y Rand */
 
 /*************************************** DEFINES ***************************************/
 

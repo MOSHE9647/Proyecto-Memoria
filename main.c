@@ -1,5 +1,6 @@
 #include "src/socios.h"
 #include "src/mapaBits.h"
+#include "src/listaLigada.h"
 
 int main () {
 	int firsTime = TRUE;
@@ -40,7 +41,9 @@ int main () {
 
 					switch (option) {
 						case 1:
+							system("clear");
 							//sigAjuste();
+							listas();
 							break;
 						case 2:
 							//primAjuste();

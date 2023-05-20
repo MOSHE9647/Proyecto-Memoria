@@ -9,7 +9,6 @@
 /************************************ INCLUDES / DEFINES *************************************/
 
 #include "memoria.h"				/* Archivo de Cabecera de Memoria */
-#include <time.h>					/* Para uso con Srand y Rand      */
 
 /*********************************** FUNCIONES A UTILIZAR ************************************/
 
@@ -270,7 +269,7 @@ void adaptSocios() {
 		lo que hace me avisan. 
 	*/
 	Memory aux;             /* Variable Auxiliar para Manejar Memoria  */
-    aux.numPart = 0;        /* Cantidad de Particiones Existente       */
+    aux.numPart = 0;        /* Cantidad de Particiones Existentes      */
     aux.size = MEMORY_SIZE; /* Asignamos el Tamaño Total de la Memoria */
 
 	for (int i = 0; i < memory.numPart; i++) {
