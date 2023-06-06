@@ -6,7 +6,18 @@
         "time.h": "c",
         "partida.h": "c",
         "unistd.h": "c",
-        "memoria.h": "c"
+        "memoria.h": "c",
+        "cmath": "c",
+        "mapabits.h": "c",
+        "limits": "c",
+        "pthread.h": "c",
+        "listasligadas.h": "c",
+        "colas.h": "c",
+        "type_traits": "c",
+        "partfijas.h": "c",
+        "array": "c",
+        "initializer_list": "c",
+        "numeric": "c"
     },
     "C_Cpp.errorSquiggles": "enabled",
     "cmake.configureOnOpen": false

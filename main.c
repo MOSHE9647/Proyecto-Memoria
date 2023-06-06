@@ -1,93 +1,60 @@
-#include "src/socios.h"
-#include "src/mapaBits.h"
-#include "src/listaLigada.h"
+#include "source/listasLigadas.h"
+#include "source/partFijas.h"
+#include "source/mapaBits.h"
+#include "source/socios.h"
+#include "source/colas.h"
 
 int main () {
-	int firsTime = TRUE;
+	pthread_mutex_init(&mutex, NULL);
+
+	initMemoryFijas();
+    initMemoryBits();
+    initSocios();
+
 	int option = 0;
-	do {
-		system("clear");
-		printf("Proyecto Administración de Memoria\n");
-		printf("**************************************\n");
-		printf("1. Mapas de Bits\n");
-		printf("2. Listas Ligadas\n");
-		printf("3. Sistemas Socios\n");
-		printf("4. Tamaños Variables\n");
-		printf("5. Salir del Programa\n");
-		printf("**************************************\n");
-		printf("Digite una Opcion: "); scanf("%d", &option);
+	system("clear");
+	printf("Proyecto Administración de Memoria\n");
+	printf("**************************************\n");
+	printf("1. Mapas de Bits\n");
+	printf("2. Listas Ligadas\n");
+	printf("3. Sistemas Socios\n");
+	printf("4. Tamaños Variables\n");
+	printf("5. Salir del Programa\n");
+	printf("**************************************\n");
+	printf("Digite una Opcion: "); scanf("%d", &option);
+	system("clear");
 
-		switch (option) {
-			case 1: {
-				system("clear");
-				if (firsTime) { initMapaBits(); firsTime = FALSE; }
-				else { adaptBits(); }
-				mapaDeBits();
-				break;
-			}
-			case 2: {
-				int option = 0;
-				do {
-					system("clear");
-					printf("Politica: Listas Ligadas\n");
-					printf("**************************************\n");
-					printf("1. Siguiente Ajuste\n");
-					printf("2. Primer Ajuste\n");
-					printf("3. Mejor Ajuste\n");
-					printf("4. Peor Ajuste\n");
-					printf("5. Volver\n");
-					printf("**************************************\n");
-					printf("Digite una Opcion: "); scanf("%d", &option);
-
-					switch (option) {
-						case 1:
-							system("clear");
-							//sigAjuste();
-							listas();
-							break;
-						case 2:
-							//primAjuste();
-							break;
-						case 3:
-							//mejorAjuste();
-							break;
-						case 4:
-							//peorAjuste();
-							break;
-						case 5:
-							break;
-						default:
-							printf("\nOpcion Invalida!!\n");
-							printf("Digite una Opcion Valida...\n\n");
-							sysPause();
-							break;
-					}
-				} while (option != 5);
-				break;
-			}
-			case 3: {
-				system("clear");
-				if (firsTime) { initSocios(); firsTime = FALSE; }
-				else { adaptSocios();}
-				socios();
-				sysPause();
-				break;
-			}
-			case 4: {
-				//multiProgram();
-				break;
-			}
-			case 5: {
-				printf("\nSaliendo del Programa...\n");
-				break;
-			}
-			default: {
-				printf("\nOpcion Invalida!!\n");
-				printf("Digite una Opcion Valida...\n\n");
-				sysPause();
-				break;
-			}
+	switch (option) {
+		case 1: {
+			politica = MAPA_BITS;
+			break;
 		}
-	} while (option != 5);
+		case 2: {
+			politica = LISTAS_LIGADAS;
+			break;
+		}
+		case 3: {
+			politica = SOCIOS;
+			break;
+		}
+		case 4: {
+			politica = PART_FIJAS;
+			break;
+		}
+		case 5: {
+			printf("\nSaliendo del Programa...\n");
+			break;
+		}
+		default: {
+			printf("\nOpcion Invalida!!\n");
+			printf("Digite una Opcion Valida...\n\n");
+			break;
+		}
+	}
+
+    iniciarEjecucion();
+	printStadistics();
+
+	pthread_mutex_destroy(&mutex);
 	return 1;
 }
