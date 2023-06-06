@@ -69,11 +69,12 @@ bool allocMemorySocios(Process *p) {
 				// Aquí asignamos los Procesos:
 				mem.partitions[i].isFree = false; // Indicamos que la Partición está Ocupada
 				mem.partitions[i].process = p;	  // Le asignamos el Proceso a la Partición
-				printProcess();
+				printProcess();					  // Imprimimos la Lista de Procesos
 				printMemorySocios();			  // Imprimimos el Estado de la Memoria
 				partitionID++;					  // Incrementamos el ID
 				printf("Proceso %d (%d KB) asignado a la Partición %d (%d KB)\n", p->id, p->size, mem.partitions[i].id, mem.partitions[i].size);
 				
+				// Calculamos el Desperdicio Interno y Externo
 				int restante = mem.partitions[i].size - p->size;
 				despInterno += restante;
 				despExterno += MEMORY_SIZE - despInterno;
@@ -120,8 +121,8 @@ bool allocMemorySocios(Process *p) {
 					mem.partitions[i] = aux; 					// Asignamos la Partición
 					mem.partitions[i + 1] = aux;				// Volvemos a Asignar
 					mem.partitions[i + 2].size = MEMORY_SIZE;	// Acomodamos la Partición 1
-					mem.numPart++;						// Eliminamos la Partición 1
-					firstTime = false;								// Indicamos que ya no es la Primera Vez
+					mem.numPart++;								// Eliminamos la Partición 1
+					firstTime = false;							// Indicamos que ya no es la Primera Vez
 				} else {
 					/*********************************************************
 						Si no es la Primera vez que se corre el Programa
@@ -137,7 +138,7 @@ bool allocMemorySocios(Process *p) {
 					// Asignamos la particion Auxiliar:
 					mem.partitions[i] = aux;	 // Asignamos Aux
 					mem.partitions[i + 1] = aux; // Cambiamos el Tamaño de 'i + 1'
-					mem.numPart++;		 // Incrementamos el Número de Particiones
+					mem.numPart++;		 		 // Incrementamos el Número de Particiones
 				}
 				i = -1;	// Reiniciamos el Contador del for
 			}
@@ -188,14 +189,14 @@ void freeMemorySocios(int processID) {
 						if (mem.partitions[i].id == mem.partitions[i + 1].id) {
 							if (mem.partitions[i].size == mem.partitions[i + 1].size) {
 								mem.partitions[i].size *= 2;  // Duplicamos su Tamaño
-								delPartition(i + 1);             // Eliminamos la Particion Sobrante
-								deleted = true;					 // Indicamos que se Liberó
+								delPartition(i + 1);          // Eliminamos la Particion Sobrante
+								deleted = true;				  // Indicamos que se Liberó
 							}
 						}
 					}
 					mem.partitions[i].process = NULL;  // Eliminamos el Proceso
 					mem.partitions[i].isFree = true;   // Liberamos la Memoria
-					deleted = true;						  // Indicamos que se Liberó
+					deleted = true;					   // Indicamos que se Liberó
 					// Estético:
 					system("clear");
 					printMemorySocios();
@@ -212,7 +213,7 @@ void freeMemorySocios(int processID) {
 				if (mem.partitions[j].isFree && mem.partitions[j + 1].isFree) {
 					if (mem.partitions[j].size == mem.partitions[j + 1].size) {
 						mem.partitions[j].size *= 2; // Duplicamos su Tamaño
-						delPartition(j + 1); 			 // Eliminamos la Particion Sobrante
+						delPartition(j + 1); 		 // Eliminamos la Particion Sobrante
 					}
 				}
 			}
@@ -223,8 +224,8 @@ void freeMemorySocios(int processID) {
 				todas las variables de la Memoria
 			**********************************************/
 			system("clear");     // Limpiamos Pantalla de la Consola
-			initSocios();  // Reiniciamos las Particiones de la Memoria
-			printProcess();
+			initSocios();  		 // Reiniciamos las Particiones de la Memoria
+			printProcess();		 // Imprimimos la Lista de Procesos
 			printMemorySocios(); // Imprimimos el Estado de la Memoria
 			printf("Toda la Memoria ha sido Liberada...\n");
 		}
@@ -247,15 +248,15 @@ void initSocios() {
 
 	// Iniciamos la Partición 1:
 	mem.partitions[0].size = MEMORY_SIZE; // Le asignamos 256 KB de Memoria
-	mem.partitions[0].process = NULL;	 // Lo iniciamos en NULL
-	mem.partitions[0].isFree = true;		 // Indicamos que está Libre
-	mem.partitions[0].id = 1;			 // Le decimos que es la Partición 1
+	mem.partitions[0].process = NULL;	  // Lo iniciamos en NULL
+	mem.partitions[0].isFree = true;	  // Indicamos que está Libre
+	mem.partitions[0].id = 1;			  // Le decimos que es la Partición 1
 
 	// Iniciamos el Resto de la Memoria en NULL
 	for (int i = 1; i < MEMORY_SIZE; i++) {
 		mem.partitions[i].process = NULL;	// No tiene Proceso Asignado
 		mem.partitions[i].isFree = -1;		// No está Creada
-		mem.partitions[i].size = -1;		    // No tiene Tamaño
+		mem.partitions[i].size = -1;		// No tiene Tamaño
 		mem.partitions[i].id = -1;			// No tiene ID
 	}
 }
@@ -289,7 +290,7 @@ void adaptSocios() {
         }
         actual = actual->sig; /* Pasamos al Siguiente Nodo de la Lista */
     }
-    return;                 /* Retornamos y continuamos        */
+    return; /* Retornamos y continuamos */
 }
 
 /************************************* FUNCIONES EXTRA ***************************************/

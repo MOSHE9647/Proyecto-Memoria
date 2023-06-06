@@ -8,12 +8,11 @@
 
 /*************************************** INCLUDES **************************************/
 
-#include <semaphore.h>
 #include <pthread.h>     /* Para uso de los Hilos     */
 #include <stdbool.h>     /* Para uso de Booleanos     */
 #include <termios.h>	 /* Para la función getch()   */
 #include <stdlib.h>      /* Para uso de Rand y Srand  */
-#include <string.h>
+#include <string.h>      /* Para manejo de strings    */
 #include <signal.h>      /* Funcion que lee CTRL+Z    */
 #include <unistd.h>      /* Para uso de Sleep         */
 #include <stdio.h>       /* Para Entrada / Salida     */
@@ -21,14 +20,14 @@
 
 /*************************************** DEFINES ***************************************/
 
-#define MEMORY_SIZE 256  /* Memoria Total a Utilizar            */
-#define NUM_PROCESS 2	 /* Cantidad de Procesos a Utilizar     */
-#define PART_SIZE 4      /* Tamaño de cada Partición de Memoria */
+#define MEMORY_SIZE 256     /* Memoria Total a Utilizar            */
+#define NUM_PROCESS 2	    /* Cantidad de Procesos a Utilizar     */
+#define PART_SIZE 4         /* Tamaño de cada Partición de Memoria */
 
-#define LISTAS_LIGADAS 2
-#define PART_FIJAS 4
-#define MAPA_BITS 1
-#define SOCIOS 3
+#define LISTAS_LIGADAS 2    /* Variable para indicar Listas Listas */
+#define PART_FIJAS 4        /* Variable para indicar Part. Fijas   */
+#define MAPA_BITS 1         /* Variable para indicar Mapas de Bits */
+#define SOCIOS 3            /* Variable para indicar uso de Socios */
 
 /************************************* ESTRUCTURAS *************************************/
 
@@ -74,14 +73,16 @@ typedef struct {
 	int size;				 /* Tamaño de la Memoria  */
 } Memory;
 
+/* Estructura para las Listas de Procesos */
 typedef struct Node {
-    Process info;
-    struct Node *sig;
+    Process info;       /* Proceso a Almacenar       */
+    struct Node *sig;   /* Puntero al Siguiente Nodo */
 } Node;
 
+/* Estructura para las Colas */
 typedef struct {
-    Node *head;
-    pthread_mutex_t mutex;
+    Node *head;             /* Inicio de las Colas         */
+    pthread_mutex_t mutex;  /* Mutex para Manejo con Hilos */
 } Cola;
 
 /************************************* FUNCIONES **************************************/
@@ -104,14 +105,14 @@ double totTiempoES = 0.0;    /* Tiempo Total de Espera E/S de Todos los Procesos
 int despExterno = 0;         /* Desperdicio Externo de Memoria	*/
 int despInterno = 0;         /* Desperdicio Interno de Memoria	*/
 
-Cola *solicitudes;
-Cola *ejecucion;
-Cola *espera;
-Cola *listos;
-Cola *todos;
+Cola *solicitudes;           /* Variable para la Cola de Solicitudes     */
+Cola *ejecucion;             /* Variable para la Cola de Ejecución       */
+Cola *espera;                /* Variable para la Cola de Espera E/S      */
+Cola *listos;                /* Variable para la Cola de Listos          */
+Cola *todos;                 /* Variable para Guardar Todos los Procesos */
 
-int politica = 1;
-int ajuste = 7;
+int politica = 1;            /* Politica que se está usando actualmente  */
+int ajuste = 7;              /* Ajuste en caso de usar Listas Ligadas    */
 
 /********************************* MANEJO DE LISTAS ***********************************/
 // Inserta un Elemento al Final de la Lista
@@ -233,26 +234,37 @@ void sysPause() {
 }
 /* Permite leer una tecla sin presionar enter */
 int getch() {
+    /************************************************
+        Esta función se encarga de leer una tecla
+        sin la necesidad de presionar Enter, para
+        eso realizamos una modificación en las
+        variables de Entorno de la Terminal.
+    *************************************************/
     struct termios old, newT;
     int ch;
 
+    /* Modificamos la Terminal */
     tcgetattr(STDIN_FILENO, &old);
     newT = old;
     newT.c_lflag &= ~(ICANON | ECHO);
     tcsetattr(STDIN_FILENO, TCSANOW, &newT);
 
+    // Leemos la Tecla
     ch = getchar();
 
+    /* Reestablecemos la Terminal */
     tcsetattr(STDIN_FILENO, TCSANOW, &old);
 
+    /* Retornamos la Tecla */
     return ch;
 }
-// Funcion para ir a una posicion (x, y) de la terminal
-void gotoxy(int x, int y) {
-    printf("\033[%d;%dH", y, x);
-}
-
+// Cuenta los Nodos que hay en Solicitudes
 int contarNodos() {
+    /**************************************************
+        Esta función se encarga de contar los
+        Nodos existentes en la Lista de Solicitudes
+        para poder mostrarlos en Pantalla
+    ***************************************************/
     Node *actual = solicitudes->head;
     int canNodos = 0;
     while (actual != NULL) {
@@ -263,12 +275,27 @@ int contarNodos() {
 }
 // Muestra la Información de los Procesos en Pantalla
 void printProcess() {
+    /**********************************************************
+        Esta función se encarga de Mostrar por Pantalla
+        todos y cada uno de los Procesos que se encuentran
+        dentro del Contexto de Ejecución, mostrando en que
+        Lista se encuentra cada uno.
+    ***********************************************************/
     Node *actual = ejecucion->head;
     printf("                     LISTA DE PROCESOS\n");
     printf("══════════════════════════════════════════════════════════════\n");
     printf(" PID\tTAMAÑO\tN° EXEC\tN° E/S\tPOLITICA\tESTADO\n");
     printf("--------------------------------------------------------------\n");
     
+    /***********************************************
+        NOTA= Contraer los for de ser necesario
+
+        En esta parte usamos varios Switch para
+        comprobar la política y el ajuste usados
+        en cada Proceso para poder mostrarlos por
+        Pantalla en la Tabla.
+    ************************************************/
+
     // Lista de Ejecución
     for (actual; actual != NULL; actual = actual->sig) {
         char estado[20] = "";

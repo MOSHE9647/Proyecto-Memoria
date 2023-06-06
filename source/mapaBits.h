@@ -6,7 +6,7 @@
 		A LA POLITICA DE ADMINISTRACION DE MEMORIA "MAPA DE BITS"
 **********************************************************************************************/
 
-#include "memoria.h"		/* Archivo de Cabecera donde está lo Relacionado a la Memoria */
+#include "memoria.h"	/* Archivo de Cabecera donde está lo Relacionado a la Memoria */
 
 /*********************************** FUNCIONES A UTILIZAR ************************************/
 
@@ -23,23 +23,40 @@ bool isDefrag();					/* Verifica que la Defragmentación haya sido exitosa     *
 
 // Inicializa la Memoria para Mapa de Bits
 void initMemoryBits() {
-	memory = (Lista*)malloc(sizeof(Lista));
-	memory->head = NULL;
+	/************************************************
+        Esta función se encarga de Inicializar la
+        Memoria para su uso con Mapa de Bits
+    ************************************************/
+	memory = (Lista*)malloc(sizeof(Lista));	// Asignamos Memoria
+	memory->head = NULL;					// Iniciamos en NULL
 	for (int size = PART_SIZE; size <= MEMORY_SIZE; size += PART_SIZE) {
-		Partition temp;
-		temp.size = PART_SIZE;
-		temp.process = NULL;
-		temp.isFree = true;
-		temp.id = 0;
-		insertNode(&memory->head, temp);
+		Partition temp;						// Creamos una Partición Temporal
+		temp.size = PART_SIZE;				// Le asignamos un Tamaño
+		temp.process = NULL;				// Indicamos que no posee un Proceso
+		temp.isFree = true;					// Indicamos que no está Ocupada
+		temp.id = 0;						// La iniciamos con ID 0
+		insertNode(&memory->head, temp);	// Insertamos la Partición en la Lista
 	}
 	printf("\n");
 }
 // Asigna Memoria a un Proceso
 bool allocMemoryBits(Process *p) {
-	if (firstTime) { firstTime = false; }
-	else { adaptBits(); }
-	
+	/******************************************************************
+		Esta funcion se encarga de Asignarle Memoria a un Proceso
+		pasado por parámetro.
+		
+		Esta función lo que hace es redondear el tamaño del Proceso
+		a la Potencia de 2 más cercana para luego verificar que haya
+		suficiente espacio en la Memoria para asignarle al Proceso.
+
+		Para saber cuántos Bloques de Memoria va a necesitar el
+		Proceso, dividimos el tamaño redondeado del mismo entre el
+		tamaño que tiene cada Bloque (PART_SIZE). El resultado
+		obtenido es la cantidad de Bloques necesaria.
+
+		En caso de no encontrar una parición libre para el Proceso
+		se devuelve un mensaje de Error.
+	*******************************************************************/
 	Nodo *actual = memory->head;
 	while (actual != NULL) {
 		if (actual->info.isFree) {
@@ -56,29 +73,36 @@ bool allocMemoryBits(Process *p) {
 				else { canParts = 1; }
 				// Asignamos el Proceso:
 				for (int j = 0; j < canParts; j++) {
-					actual->info.isFree = false;
-					actual->info.process = p;
-					actual->info.id = j + 1;
-					actual = actual->sig;
+					actual->info.isFree = false;	// Indicamos que está Ocupada
+					actual->info.process = p;		// Le asignamos el Proceso
+					actual->info.id = j + 1;		// Le asignamos una ID
+					actual = actual->sig;			// Continuamos con la siguiente
 				}
-				system("clear");
-				printProcess();
-				printMemoryBits();
+				system("clear");	// Limpiamos Pantalla
+				printProcess();		// Imprimimos la Lista de Procesos
+				printMemoryBits();	// Imprimimos el Estado de la Memoria
 				printf("Memoria Asignada al Proceso %d (%d KB)\n", p->id, p->size);
 
+				/* Calculamos el Desperdicio Interno y Externo */
 				int restante = actual->info.size - p->size;
 				despInterno += restante;
 				despExterno += MEMORY_SIZE - despInterno;
 
+				// Retornamos
 				return true;
 			}
 		}
 		actual = actual->sig;
 	}
-	system("clear");
-	printProcess();
-	printMemoryBits();
+	system("clear");	// Limpiamos Pantalla
+	printProcess();		// Imprimimos la Lista de Procesos
+	printMemoryBits();	// Imprimimos el Estado de la Memoria
 
+	/*************************************************
+		En caso de no poder asignar la Memoria
+		verificamos si la memoria está Fragmentada,
+		de ser así la Desfragmentamos
+	**************************************************/
 	if (!isDefrag()) {
 		defragMemory();
 		if (allocMemoryBits(p)) {
@@ -86,39 +110,54 @@ bool allocMemoryBits(Process *p) {
 		}
 	}
 
+	// Si igual no se pudo asignar la Memoria, mostramos un Mensaje de Error
 	printf("\nError: No se le pudo asignar Memoria al Proceso %d (%d KB).\n", p->id, p->size);
 	printf("No hay Suficiente Espacio en Memoria.\n");
 	return false;
 }
 // Libera la Memoria Utilizada por un Proceso
 void freeMemoryBits(int processID) {
+	/****************************************************************************
+		Esta funcion se encarga de Liberar la Memoria que posee asignado
+		un Proceso.
+
+		Esta función primero verifica que exista el ID pasado por parámetro,
+		una vez encontrado el Proceso procede a dividir el tamaño del mismo
+		entre PART_SIZE para saber cuántos Bloques hay que liberar
+	******************************************************************************/
 	Nodo *actual = memory->head;
 	if (actual != NULL) {
 		while (actual != NULL) {
 			if (actual->info.process != NULL) {
 				if (actual->info.process->id == processID) {
+					/**********************************************
+						Para saber cuántos espacios de Memoria
+						vamos a necesitar para Liberar el Proceso,
+						dividimos el tamaño (redondeado) del
+						Proceso entre 4.
+					**********************************************/
 					int size = newSpace(actual->info.process->size);
 					int canParts = 0;
 					if (size >= 4) { canParts = size / PART_SIZE; }
 					else { canParts = 1; }
 					for (int j = 0; j < canParts; j++) {
-						actual->info.process = NULL;
-						actual->info.isFree = true;
-						actual->info.id = 0;
-						actual = actual->sig;
+						actual->info.process = NULL;	// Liberamos el Proceso
+						actual->info.isFree = true;		// Indicamos que está Libre
+						actual->info.id = 0;			// Asignamos el ID en 0
+						actual = actual->sig;			// Continuamos con el Siguiente Bloque
 					}
-					system("clear");
-					printProcess();
-					printMemoryBits();
+					system("clear");	// Limpiamos Pantalla
+					printProcess();		// Imprimimos la Lista de Procesos
+					printMemoryBits();	// Imprimimos el Estado de la Memoria
 					printf("Memoria Liberada (Proceso %d)...\n", processID);
 					return;
 				}
 			}
 			actual = actual->sig;
 		}
-		system("clear");
-		printProcess();
-		printMemoryBits();
+		system("clear");	// Limpiamos Pantalla
+		printProcess();		// Imprimimos la Lista de Procesos
+		printMemoryBits();	// Imprimimos el Estado de la Memoria
 		printf("No se pudo Liberar la Memoria del Proceso %d\n", processID);
 		return;
 	}
@@ -178,21 +217,23 @@ void printMemoryBits() {
 		de Memoria en forma de Lista y Matriz:
 	*****************************************************/
 	Nodo *actual = memory->head;
-
 	printf("\n            ESTADO DE LA MEMORIA: Mapa de Bits\n");
 	printf("══════════════════════════════════════════════════════════════\n");
 	printf(" #\tPARTICION   \tTAMAÑO\t        ESTADO\t   PROCESO\t\n");
 	printf("--------------------------------------------------------------\n");
 	for (int i = 0; actual != NULL; i++) {
 		if (actual->info.process != NULL) {
+			/* Mostramos la Info de cada Particion */
 			printf(" %d\tPartición %d\t%d KB\t\t%s\t   %d (%d KB)\n", i + 1, actual->info.id, actual->info.size, actual->info.isFree ? "Libre" : "Ocupada", actual->info.process->id, actual->info.process->size);
 		} else {
+			/* Mostramos que las Particiones estén vacías */
 			printf(" %d\tPartición %d\t%d KB\t\t%s\t   %s (%d KB)\n", i + 1, actual->info.id, actual->info.size, actual->info.isFree ? "Libre" : "Ocupada", "N/A", 0);
 		}
 		actual = actual->sig;
 	}
 	printf("══════════════════════════════════════════════════════════════\n\n");
 
+	// Imprimimos en forma de Matriz
 	printf("MATRIZ:\n");
 	actual = memory->head;
 	for (int i = 0; actual != NULL; i++) {
@@ -209,6 +250,10 @@ void printMemoryBits() {
 }
 // Verifica que la Desfragmentación de Memoria haya sido exitosa
 bool isDefrag() {
+	/*********************************************
+		Esta función se encarga de verificar si
+		la Matriz está desfragmentada o no
+	**********************************************/
 	Nodo *actual = memory->head;
 	bool nodeIsNotFree = false;
 
@@ -222,6 +267,15 @@ bool isDefrag() {
 }
 // Defragmenta la Memoria en Mapa de Bits
 bool defragMemory() {
+	/********************************************
+		Esta función se encarga de Realizar la
+		Desfragmentación de la Memoria.
+
+		Lo único que se hace es verificamos
+		cuáles Bloques de Memoria son los que
+		están libres para moverlos al inicio
+		de la Matriz
+	*********************************************/
 	Nodo *actual = memory->head;
 	Nodo *anterior = NULL;
 
@@ -241,6 +295,7 @@ bool defragMemory() {
 		actual = actual->sig;
 	}
 
+	/* Verificamos que se haya Desfragmentado y retornamos */
 	return isDefrag() ? true : false;
 }
 

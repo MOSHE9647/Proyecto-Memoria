@@ -1,16 +1,19 @@
-#include "source/listasLigadas.h"
-#include "source/partFijas.h"
-#include "source/mapaBits.h"
-#include "source/socios.h"
-#include "source/colas.h"
+#include "source/listasLigadas.h"	/* Codigo de Listas Ligadas    */
+#include "source/partFijas.h"		/* Codigo de Particiones Fijas */
+#include "source/mapaBits.h"		/* Código de Mapa de Bits	   */
+#include "source/socios.h"			/* Código de Socios			   */
+#include "source/colas.h"			/* Código de las Colas 		   */
 
 int main () {
+	// Inicializamos el Mutex
 	pthread_mutex_init(&mutex, NULL);
 
+	// Inicializamos las Memorias
 	initMemoryFijas();
     initMemoryBits();
     initSocios();
 
+	// Menu Principal
 	int option = 0;
 	system("clear");
 	printf("Proyecto Administración de Memoria\n");
@@ -24,6 +27,7 @@ int main () {
 	printf("Digite una Opcion: "); scanf("%d", &option);
 	system("clear");
 
+	// Asignamos la Política a Utilizar
 	switch (option) {
 		case 1: {
 			politica = MAPA_BITS;
@@ -52,9 +56,12 @@ int main () {
 		}
 	}
 
+	// Entramos a Ejecución
     iniciarEjecucion();
+	// Mostramos las Estadísticas
 	printStadistics();
 
+	// Destruimos el Mutex
 	pthread_mutex_destroy(&mutex);
 	return 1;
 }

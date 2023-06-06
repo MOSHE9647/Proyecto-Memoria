@@ -70,6 +70,12 @@ void adaptListas() {
 }
 // Algoritmo del Primer Ajuste
 bool primerAjuste(Process *p) {
+    /**************************************************
+        Algoritmo del Primer Ajuste:
+        Se encarga de asignarle al Proceso el primer
+        Bloque de Memoria que encuentre y esté Libre
+    ***************************************************/
+
     Nodo *actual = memory->head;
 
     while (actual != NULL) {
@@ -78,16 +84,22 @@ bool primerAjuste(Process *p) {
                 actual->info.process = p;
                 actual->info.isFree = false;
                 actual->info.id = 0;
-
+                /****************************************************
+                    En caso de que el tamaño del Bloque asignado
+                    sea mayor al tamaño del Proceso, dividimos el
+                    Bloque y el sobrante lo insertamos a la Lista
+                    como un Bloque Nuevo a la par del Actual
+                *****************************************************/
                 if (actual->info.size > p->size) {
-                    Partition temp;
-                    temp.id = 0;
-                    temp.process = NULL;
-                    temp.isFree = true;
-                    temp.size = actual->info.size - p->size;
-                    insertMiddle(actual, temp);
-                    actual->info.size = p->size;
+                    Partition temp;                             // Particion Temporal
+                    temp.id = 0;                                // Asignamos ID
+                    temp.process = NULL;                        // Indicamos que no posee un Proceso
+                    temp.isFree = true;                         // Indicamos que está Libre
+                    temp.size = actual->info.size - p->size;    // Asignamos el Tamaño Sobrante
+                    insertMiddle(actual, temp);                 // Insertamos a la par del Actual
+                    actual->info.size = p->size;                // Asignamos el Tamaño del Proceso al Bloque Actual
 
+                    /* Calculamos el Desperdicio Interno y Externo */
                     int restante = actual->info.size - p->size;
                     despInterno += restante;
                     despExterno += MEMORY_SIZE - despInterno;
@@ -102,23 +114,29 @@ bool primerAjuste(Process *p) {
 }
 // Algoritmo del Segundo Ajuste
 bool segundoAjuste(Process *p) {
-    Nodo *actual;
-
-    if (memory->lastUsedNode != NULL)
-    {
-        actual = memory->lastUsedNode;
-    }
+    /**************************************************
+        Algoritmo del Segundo Ajuste:
+        Se encarga de asignarle al Proceso el segundo
+        Bloque de Memoria que encuentre y esté Libre
+    ***************************************************/
+    Nodo *actual = NULL;
+    /* Si existe, iniciamos del último Bloque Utilizado */
+    if (memory->lastUsedNode != NULL) { actual = memory->lastUsedNode; }
+    /* Sino, iniciamos desde el Inicio */
     else { actual = memory->head; }
 
     while (actual != NULL) {
         if (actual->info.isFree) {
             if (actual->info.size > p->size) {
-                actual->info.process = p;
-                actual->info.isFree = false;
-                actual->info.id = 0;
-
+                actual->info.process = p;       // Asignamos el Proceso
+                actual->info.isFree = false;    // Indicamos que está Ocupada
+                actual->info.id = 0;            // Asignamos un ID
+                /******************************************************
+                    Si el Proceso es más grande que el Bloque
+                    realizamos lo mismo que en el Algoritmo Anterior.
+                *******************************************************/
                 if (actual->info.size > p->size) {
-                    Partition temp;
+                    Partition temp;         
                     temp.id = 0;
                     temp.process = NULL;
                     temp.isFree = true;
@@ -126,14 +144,15 @@ bool segundoAjuste(Process *p) {
                     insertMiddle(actual, temp);
                     actual->info.size = p->size;
                 }
-
+                // Marcamos el Bloque como el Último Usado
                 memory->lastUsedNode = actual;
 
-                system("clear");
-				printProcess();
-				printMemoryListas();
+                system("clear");        // Limpiamos la Pantalla de la Consola
+				printProcess();         // Imprimimos la Lista de Procesos
+				printMemoryListas();    // Imprimimos el Estado de la Memoria
 				printf("Memoria Asignada al Proceso %d (%d KB)\n", p->id, p->size);
 
+                // Calculamos el Desperdicio Interno y Externo
                 int restante = actual->info.size - p->size;
                 despInterno += restante;
                 despExterno += MEMORY_SIZE - despInterno;
@@ -148,9 +167,16 @@ bool segundoAjuste(Process *p) {
 }
 // Algoritmo del Mejor Ajuste
 bool mejorAjuste(Process *p) {
+    /**************************************************
+        Algoritmo del Mejor Ajuste:
+        Se encarga de asignarle al Proceso el Bloque
+        de Memoria que mejor se ajuste al Tamaño del
+        Proceso.
+    ***************************************************/
     Nodo *actual = memory->head;
     Nodo *mejor = NULL;
 
+    // Buscamos el Bloque que mejor se Ajuste
     while (actual != NULL) {
         if (actual->info.isFree) {
             if (actual->info.size > p->size) {
@@ -164,26 +190,30 @@ bool mejorAjuste(Process *p) {
         }
         actual = actual->sig;
     }
-
+    /*******************************************************
+        En caso de haber encontrado un Bloque de Memoria,
+        le asignamos el Bloque de Memoria al Proceso
+    ********************************************************/
     if (mejor != NULL) {
-        mejor->info.id = 0;
-        mejor->info.isFree = false;
-        mejor->info.process = p;
+        mejor->info.id = 0;             // Asignamos un ID
+        mejor->info.isFree = false;     // Indicamos que está Ocupado
+        mejor->info.process = p;        // Le Asignamos el Proceso
         if (mejor->info.size > p->size) {
-            Partition temp;
-            temp.id = 0;
-            temp.process = NULL;
-            temp.isFree = true;
-            temp.size = mejor->info.size - p->size;
-            insertMiddle(mejor, temp);
-            mejor->info.size = p->size;
+            Partition temp;             // Nueva Partición
+            temp.id = 0;                // Asignamos un ID
+            temp.process = NULL;        // Indicamos que no posee un Proceso
+            temp.isFree = true;         // Indicamos que está Libre
+            temp.size = mejor->info.size - p->size; // Asignamos el Tamaño Sobrante
+            insertMiddle(mejor, temp);  // La insertamos después del Actual
+            mejor->info.size = p->size; // Le asignamos al Actual el Tamaño del Proceso
         }
 
-        system("clear");
-        printProcess();
-        printMemoryListas();
+        system("clear");        // Limpiamos la Pantalla de la Consola
+        printProcess();         // Imprimimos la Lista de Procesos
+        printMemoryListas();    // Imprimimos el Estado de la Memoria
         printf("Memoria Asignada al Proceso %d (%d KB)\n", p->id, p->size);
 
+        // Calculamos el Desperdicio Interno y Externo
         int restante = actual->info.size - p->size;
         despInterno += restante;
         despExterno += MEMORY_SIZE - despInterno;
@@ -193,9 +223,16 @@ bool mejorAjuste(Process *p) {
 }
 // Algoritmo del Peor Ajuste
 bool peorAjuste(Process *p) {
+    /**************************************************
+        Algoritmo del Peor Ajuste:
+        Se encarga de asignarle al Proceso el Bloque
+        de Memoria que peor se ajuste al Tamaño del
+        Proceso.
+    ***************************************************/
     Nodo *actual = memory->head;
     Nodo *peor = NULL;
 
+    // Buscamos el Bloque que Peor se Ajuste
     while (actual != NULL) {
         if (actual->info.isFree) {
             if (actual->info.size > p->size) {
@@ -209,26 +246,29 @@ bool peorAjuste(Process *p) {
         }
         actual = actual->sig;
     }
-
+    /*******************************************************
+        En caso de haber encontrado un Bloque de Memoria,
+        le asignamos el Bloque de Memoria al Proceso
+    ********************************************************/
     if (peor!= NULL) {
-        peor->info.id = 0;
-        peor->info.isFree = false;
-        peor->info.process = p;
+        peor->info.id = 0;             // Asignamos un ID
+        peor->info.isFree = false;     // Indicamos que está Ocupado
+        peor->info.process = p;        // Le Asignamos el Proceso
         if (peor->info.size > p->size) {
-            Partition temp;
-            temp.id = 0;
-            temp.process = NULL;
-            temp.isFree = true;
-            temp.size = peor->info.size - p->size;
-            insertMiddle(peor, temp);
-            peor->info.size = p->size;
+            Partition temp;             // Nueva Partición
+            temp.id = 0;                // Asignamos un ID
+            temp.process = NULL;        // Indicamos que no posee un Proceso
+            temp.isFree = true;         // Indicamos que está Libre
+            temp.size = peor->info.size - p->size; // Asignamos el Tamaño Sobrante
+            insertMiddle(peor, temp);   // La insertamos después del Actual
+            peor->info.size = p->size;  // Le asignamos al Actual el Tamaño del Proceso
         }
-
-        system("clear");
-        printProcess();
-        printMemoryListas();
+        system("clear");        // Limpiamos la Pantalla de la Consola
+        printProcess();         // Imprimimos la Lista de Procesos
+        printMemoryListas();    // Imprimimos el Estado de la Memoria
         printf("Memoria Asignada al Proceso %d (%d KB)\n", p->id, p->size);
 
+        // Calculamos el Desperdicio Interno y Externo
         int restante = actual->info.size - p->size;
         despInterno += restante;
         despExterno += MEMORY_SIZE - despInterno;
@@ -238,6 +278,10 @@ bool peorAjuste(Process *p) {
 }
 // Asigna Memoria a un Proceso
 bool allocListas(int ajuste, Process *p) {
+    /***************************************************
+        Esta función se encarga de Asignar la Memoria
+        según el Ajuste que se haya escogido
+    ****************************************************/
     if (ajuste == 1) { primerAjuste(p);  return true; }
     if (ajuste == 2) { segundoAjuste(p); return true; }
     if (ajuste == 3) { mejorAjuste(p);   return true; }
@@ -246,33 +290,47 @@ bool allocListas(int ajuste, Process *p) {
 }
 // Libera la Memoria Utilizada por un Proceso
 void freeListas(int processID) {
+    /****************************************************************************
+		Esta funcion se encarga de Liberar la Memoria que posee asignado
+		un Proceso.
+
+		Esta función primero verifica que exista el ID pasado por parámetro,
+		una vez encontrado el Proceso procede a dividir el tamaño del mismo
+		entre PART_SIZE para saber cuántos Bloques hay que liberar
+	******************************************************************************/
     Nodo *actual = memory->head;
     if (actual != NULL) {
         while (actual != NULL) {
             if (actual->info.process != NULL) {
                 if (actual->info.process->id == processID) {
+                    /**********************************************
+						Para saber cuántos espacios de Memoria
+						vamos a necesitar para Liberar el Proceso,
+						dividimos el tamaño (redondeado) del
+						Proceso entre 4.
+					**********************************************/
                     int canParts = 0;
                     if (actual->info.process->size <= 2) { canParts = 1; }
                     else { canParts = actual->info.process->size / PART_SIZE; }
                     for (int j = 0; j < canParts; j++) {
                         if (actual != NULL) {
-                            actual->info.process = NULL;
-                            actual->info.isFree = true;
-                            actual->info.id = 0;
-                            actual = actual->sig;
+                            actual->info.process = NULL;	// Liberamos el Proceso
+                            actual->info.isFree = true;		// Indicamos que está Libre
+                            actual->info.id = 0;			// Asignamos el ID en 0
+                            actual = actual->sig;			// Continuamos con el Siguiente Bloque
                         }
                     }
-                    system("clear");
-                    printProcess();
-                    printMemoryListas();
+                    system("clear");	    // Limpiamos Pantalla
+                    printProcess();		    // Imprimimos la Lista de Procesos
+                    printMemoryListas();    // Imprimimos el Estado de la Memoria
                     printf("Memoria Liberada (Proceso %d)...\n", processID);
                     return;
                 }
             }
             actual = actual->sig;
         }
-        printProcess();
-        printMemoryListas();
+        printProcess();         // Imprimimos la Lista de Procesos
+        printMemoryListas();    // Imprimimos el Estado de la Memoria
         printf("No se pudo Liberar la Memoria del Proceso %d\n", processID);
         return;
     }
